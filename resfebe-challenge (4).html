@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Resfebe Challenge – YTFL</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  /* School palette: deep navy + gold + red accents */
+  --bg:        #0a1628;
+  --bg2:       #0f1e38;
+  --surface:   #132240;
+  --surface2:  #1a2d52;
+  --primary:   #c9a227;   /* gold */
+  --plight:    #e8c55a;
+  --accent:    #d62828;   /* red */
+  --correct:   #1fd172;
+  --wrong:     #e84545;
+  --text:      #f0e6c8;
+  --muted:     #8fa3c8;
+  --border:    rgba(201,162,39,.25);
+  --shadow:    0 4px 28px rgba(0,0,0,.55);
+  --radius:    16px;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+  background-image:
+    radial-gradient(ellipse at 15% 0%,   #1a3566 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 100%, #2a1a08 0%, transparent 55%);
+}
+
+/* ── ATOM PARTICLES (decorative bg) ── */
+.atom-bg {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.orbit {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(201,162,39,.08);
+  animation: spin linear infinite;
+}
+.orbit:nth-child(1) { width:300px;height:300px; top:-80px; left:-80px; animation-duration:22s; }
+.orbit:nth-child(2) { width:220px;height:220px; bottom:-60px; right:-60px; animation-duration:16s; animation-direction:reverse; }
+.orbit:nth-child(3) { width:160px;height:160px; top:40%; right:5%; animation-duration:30s; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── HEADER ── */
+header {
+  background: linear-gradient(90deg, #0d1e3d 0%, #132240 60%, #1a2d15 100%);
+  border-bottom: 2px solid var(--primary);
+  padding: .45rem 1rem;
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  flex-shrink: 0; z-index: 10; flex-wrap: wrap;
+  box-shadow: 0 3px 20px rgba(0,0,0,.5);
+  position: relative;
+}
+header::after {
+  content: '';
+  position: absolute; bottom: -4px; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--plight), transparent);
+  opacity: .5;
+}
+
+.header-logo {
+  display: flex; align-items: center; gap: .6rem;
+}
+.header-logo img {
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 2px solid var(--primary);
+  box-shadow: 0 0 12px rgba(201,162,39,.4);
+  flex-shrink: 0;
+}
+.header-school {
+  display: flex; flex-direction: column; line-height: 1.15;
+}
+.header-school .school-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: clamp(.75rem, 2.5vw, 1.05rem);
+  color: var(--primary);
+  letter-spacing: .3px;
+}
+.header-school .game-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: clamp(1rem, 3.5vw, 1.45rem);
+  color: var(--text);
+  letter-spacing: .5px;
+}
+.header-school .sub {
+  font-size: clamp(.52rem, 1.6vw, .66rem);
+  color: var(--muted); font-weight: 600;
+}
+
+.header-right { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
+
+/* speed */
+.speed-selector { display: flex; gap: .2rem; }
+.spd-btn {
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: .65rem;
+  padding: .22rem .55rem; border-radius: 99px;
+  border: 1.5px solid var(--border);
+  background: var(--surface); color: var(--muted); cursor: pointer;
+  transition: all .15s;
+}
+.spd-btn.active { background: var(--primary); border-color: var(--primary); color: #0a1628; }
+.spd-btn:hover:not(.active) { border-color: var(--plight); color: var(--plight); }
+
+/* scoreboard */
+.scoreboard { display: flex; gap: .3rem; }
+.score-box {
+  display: flex; flex-direction: column; align-items: center;
+  border-radius: 10px; padding: .22rem .55rem; min-width: 44px;
+  border: 1.5px solid transparent;
+}
+.score-box.cb { border-color: rgba(31,209,114,.3); background: rgba(31,209,114,.08); }
+.score-box.wb { border-color: rgba(232,69,69,.3);  background: rgba(232,69,69,.08); }
+.score-box.pb { border-color: var(--border); background: rgba(201,162,39,.08); min-width: 56px; }
+.slabel { font-size: .52rem; font-weight: 800; text-transform: uppercase; letter-spacing: .7px; }
+.score-box.cb .slabel { color: var(--correct); }
+.score-box.wb .slabel { color: var(--wrong); }
+.score-box.pb .slabel { color: var(--primary); }
+.sval { font-family: 'Fredoka One', cursive; font-size: 1.25rem; line-height: 1; }
+.score-box.cb .sval { color: var(--correct); }
+.score-box.wb .sval { color: var(--wrong); }
+.score-box.pb .sval { color: var(--primary); }
+@keyframes ptBump { 0%{transform:scale(1)} 40%{transform:scale(1.4)} 100%{transform:scale(1)} }
+.bump { animation: ptBump .3s ease; }
+.pt-float {
+  position: fixed; font-family: 'Fredoka One', cursive; font-size: 1.05rem;
+  pointer-events: none; z-index: 200; animation: ptFloat .85s ease forwards;
+  text-shadow: 0 2px 8px rgba(0,0,0,.6);
+}
+@keyframes ptFloat {
+  0%  { opacity:1; transform: translateY(0) scale(1); }
+  100%{ opacity:0; transform: translateY(-55px) scale(1.2); }
+}
+
+/* ── GAME AREA ── */
+#game-area {
+  flex: 1; position: relative; overflow: hidden; z-index: 1;
+  background: linear-gradient(180deg, #0d1e3d 0%, #0a1628 100%);
+}
+#game-area::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+  background: repeating-linear-gradient(90deg, var(--accent) 0, var(--accent) 10px, transparent 10px, transparent 18px);
+  opacity: .5;
+}
+
+/* ── COMBO BAR ── */
+#combo-bar {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: .4rem;
+  background: rgba(10,22,40,.88); border-radius: 99px;
+  padding: .28rem .9rem .28rem .6rem;
+  border: 1.5px solid var(--border);
+  box-shadow: 0 2px 14px rgba(0,0,0,.4);
+  backdrop-filter: blur(8px);
+  z-index: 20; transition: opacity .3s; opacity: 0; pointer-events: none;
+}
+#combo-bar.visible { opacity: 1; }
+#combo-flame { font-size: 1.2rem; line-height: 1; }
+#combo-text {
+  font-family: 'Fredoka One', cursive; font-size: .95rem;
+  color: var(--text); line-height: 1; white-space: nowrap;
+}
+#combo-text span { color: var(--primary); }
+#combo-bar.lv1 { border-color: rgba(201,162,39,.3); }
+#combo-bar.lv2 { border-color: #f59e0b; box-shadow: 0 2px 14px rgba(245,158,11,.3); }
+#combo-bar.lv3 { border-color: #f97316; box-shadow: 0 2px 16px rgba(249,115,22,.4); }
+#combo-bar.lv4 { border-color: var(--accent); box-shadow: 0 2px 18px rgba(214,40,40,.5); }
+
+/* ── FALLING CARD ── */
+.falling-card {
+  position: absolute;
+  background: linear-gradient(135deg, #132240 0%, #1a2d52 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.6), 0 0 0 1px rgba(201,162,39,.15);
+  padding: .8rem 1.2rem;
+  text-align: center;
+  min-width: 170px; max-width: 82vw;
+  border: 2px solid rgba(201,162,39,.35);
+  z-index: 5;
+}
+.falling-card .emoji-line {
+  font-size: clamp(1.5rem, 5vw, 2.2rem); line-height: 1.3; letter-spacing: 2px;
+}
+.falling-card .card-num {
+  font-size: .6rem; color: var(--primary); font-weight: 800;
+  letter-spacing: 1px; margin-bottom: .18rem; text-transform: uppercase;
+}
+@keyframes correctPop {
+  0%  { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.18); opacity: .8; }
+  100%{ transform: scale(0);   opacity: 0; }
+}
+@keyframes wrongShake {
+  0%,100%{ transform: translateX(0); }
+  20%    { transform: translateX(-10px); }
+  40%    { transform: translateX(10px); }
+  60%    { transform: translateX(-6px); }
+  80%    { transform: translateX(6px); }
+}
+
+/* ── TOAST ── */
+#toast {
+  position: absolute; top: 44%; left: 50%;
+  transform: translate(-50%,-50%) scale(0);
+  background: var(--wrong); color: #fff;
+  font-family: 'Fredoka One', cursive; font-size: 1.2rem;
+  padding: .5rem 1.4rem; border-radius: 99px;
+  z-index: 20; pointer-events: none;
+  transition: transform .13s; white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(214,40,40,.5);
+}
+#toast.show { transform: translate(-50%,-50%) scale(1); }
+#toast.ok   { background: var(--correct); box-shadow: 0 4px 20px rgba(31,209,114,.5); }
+
+/* ── INFO PANEL ── */
+#info-panel {
+  position: absolute; inset: 0;
+  background: rgba(5,12,26,.88);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 30; opacity: 0; pointer-events: none;
+  transition: opacity .25s; backdrop-filter: blur(4px);
+}
+#info-panel.show { opacity: 1; pointer-events: all; }
+.info-card {
+  background: linear-gradient(135deg, #132240 0%, #1a2d52 100%);
+  border-radius: 24px;
+  padding: 1.4rem 1.6rem;
+  max-width: 360px; width: 90vw;
+  box-shadow: 0 16px 60px rgba(0,0,0,.6);
+  border: 1.5px solid rgba(201,162,39,.3);
+  animation: popIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn { from{transform:scale(.7);opacity:0} to{transform:scale(1);opacity:1} }
+.info-word {
+  font-family: 'Fredoka One', cursive; font-size: 1.75rem; color: var(--primary);
+  display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-bottom: .3rem;
+}
+.info-tr   { color: var(--muted); font-weight: 700; font-size: .9rem; margin-bottom: .65rem; }
+.info-ex   {
+  background: rgba(255,255,255,.05); border-radius: 12px;
+  padding: .6rem .8rem; font-size: .86rem; line-height: 1.55;
+  border: 1px solid rgba(255,255,255,.07);
+}
+.info-ex .en { color: var(--text); font-weight: 600; }
+.info-ex .en em { color: var(--plight); font-style: normal; font-weight: 800; }
+.info-ex .tr-ex { color: var(--muted); font-size: .8rem; margin-top: .3rem; }
+.countdown-wrap {
+  display: flex; align-items: center; justify-content: center; margin-top: .85rem; gap: .6rem;
+}
+.countdown-ring { position: relative; width: 44px; height: 44px; flex-shrink: 0; }
+.countdown-ring svg { transform: rotate(-90deg); }
+.countdown-ring circle.bg { fill: none; stroke: rgba(255,255,255,.1); stroke-width: 4; }
+.countdown-ring circle.fg {
+  fill: none; stroke: var(--primary); stroke-width: 4;
+  stroke-dasharray: 113; stroke-dashoffset: 0;
+  transition: stroke-dashoffset .9s linear, stroke .3s; stroke-linecap: round;
+}
+.countdown-num {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: var(--primary);
+}
+.countdown-label { font-size: .75rem; color: var(--muted); font-weight: 700; }
+
+/* speak button */
+.speak-btn {
+  background: none; border: 1.5px solid var(--correct); color: var(--correct);
+  border-radius: 99px; font-family: 'Nunito', sans-serif; font-weight: 800;
+  font-size: .78rem; padding: .25rem .75rem; cursor: pointer;
+  display: inline-flex; align-items: center; gap: .3rem;
+  transition: background .15s, transform .1s;
+}
+.speak-btn:hover { background: rgba(31,209,114,.12); transform: scale(1.04); }
+.speak-btn.speaking { animation: speakPulse .5s infinite alternate; }
+@keyframes speakPulse { from{opacity:1} to{opacity:.35} }
+.combo-badge {
+  display: inline-flex; align-items: center; gap: .3rem;
+  background: linear-gradient(135deg, #c9a227, #d62828);
+  color: #fff; font-family: 'Fredoka One', cursive;
+  font-size: .78rem; border-radius: 99px; padding: .18rem .65rem;
+  animation: badgePop .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes badgePop { from{transform:scale(0)} to{transform:scale(1)} }
+
+/* ── ANSWER POOL ── */
+#answer-pool {
+  background: linear-gradient(180deg, #0f1e38 0%, #0a1628 100%);
+  border-top: 2px solid var(--border);
+  padding: .55rem .7rem .65rem;
+  flex-shrink: 0;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.4);
+  min-height: 68px; max-height: 36vh; overflow-y: auto;
+  position: relative;
+}
+#answer-pool-inner { display: flex; flex-wrap: wrap; gap: .38rem; }
+.ans-btn {
+  font-family: 'Nunito', sans-serif; font-weight: 700;
+  font-size: clamp(.68rem, 2.4vw, .86rem);
+  padding: .36rem .82rem; border-radius: 99px;
+  border: 1.5px solid rgba(201,162,39,.3);
+  background: rgba(201,162,39,.07);
+  color: var(--text); cursor: pointer;
+  transition: transform .12s, background .12s, border-color .12s, box-shadow .12s;
+  white-space: nowrap;
+}
+.ans-btn:hover:not(:disabled) {
+  background: rgba(201,162,39,.18); border-color: var(--primary);
+  transform: translateY(-2px); box-shadow: 0 4px 14px rgba(201,162,39,.2);
+}
+.ans-btn:active:not(:disabled) { transform: scale(.95); }
+.ans-btn:disabled { opacity: 0; pointer-events: none; }
+.ans-btn.flash-wrong {
+  background: rgba(214,40,40,.2); border-color: var(--wrong); color: var(--wrong);
+  animation: btnShake .35s ease;
+}
+@keyframes btnShake {
+  0%,100%{ transform: translateX(0); }
+  25%    { transform: translateX(-5px); }
+  75%    { transform: translateX(5px); }
+}
+.ans-btn.flash-correct { background: rgba(31,209,114,.15); border-color: var(--correct); color: var(--correct); }
+#answer-pool::-webkit-scrollbar { width: 4px; }
+#answer-pool::-webkit-scrollbar-thumb { background: rgba(201,162,39,.3); border-radius: 99px; }
+
+/* ── PARTICLES ── */
+.particle {
+  position: absolute; pointer-events: none; font-size: 1.2rem;
+  animation: pfly .75s ease forwards; z-index: 15;
+}
+@keyframes pfly {
+  from{ transform: translate(0,0) scale(1); opacity: 1; }
+  to  { transform: translate(var(--dx),var(--dy)) scale(0); opacity: 0; }
+}
+
+/* ── OVERLAY ── */
+#overlay {
+  position: fixed; inset: 0; background: rgba(5,10,20,.9);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; backdrop-filter: blur(8px);
+}
+.overlay-card {
+  background: linear-gradient(145deg, #132240 0%, #1a2d52 100%);
+  border-radius: 28px; padding: 2rem 1.8rem; text-align: center;
+  max-width: 380px; width: 92vw;
+  box-shadow: 0 24px 80px rgba(0,0,0,.7);
+  border: 1.5px solid rgba(201,162,39,.3);
+  animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
+  max-height: 92vh; overflow-y: auto;
+}
+.overlay-card::-webkit-scrollbar { width: 4px; }
+.overlay-card::-webkit-scrollbar-thumb { background: rgba(201,162,39,.3); border-radius: 99px; }
+
+/* overlay logo */
+.overlay-logo {
+  display: flex; align-items: center; justify-content: center; gap: .7rem;
+  margin-bottom: .9rem;
+}
+.overlay-logo img {
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 2px solid var(--primary);
+  box-shadow: 0 0 18px rgba(201,162,39,.45);
+}
+.overlay-school {
+  text-align: left; line-height: 1.2;
+}
+.overlay-school .s1 {
+  font-family: 'Fredoka One', cursive; font-size: .9rem; color: var(--primary);
+}
+.overlay-school .s2 {
+  font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: var(--text);
+}
+
+.overlay-card h2 {
+  font-family: 'Fredoka One', cursive; font-size: 1.85rem; color: var(--primary); margin-bottom: .3rem;
+}
+.overlay-card > p {
+  color: var(--muted); font-size: .9rem; margin-bottom: 1.1rem; line-height: 1.5;
+}
+.final-scores { display: flex; gap: .7rem; justify-content: center; margin-bottom: 1rem; }
+.fsb { flex: 1; border-radius: 14px; padding: .65rem; font-family: 'Fredoka One', cursive; }
+.fsb.c { background: rgba(31,209,114,.1); color: var(--correct); border: 1px solid rgba(31,209,114,.25); }
+.fsb.w { background: rgba(232,69,69,.1);  color: var(--wrong);   border: 1px solid rgba(232,69,69,.25); }
+.fsb.p { background: rgba(201,162,39,.1); color: var(--primary); border: 1px solid var(--border); }
+.fsb .fsv { font-size: 1.9rem; line-height: 1; }
+.fsb .fsl { font-size: .64rem; font-family: 'Nunito', sans-serif; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
+
+/* wrong list */
+.wrong-list-wrap { text-align: left; margin-bottom: 1rem; max-height: 32vh; overflow-y: auto; }
+.wrong-list-wrap h3 { font-size: .76rem; font-weight: 800; color: var(--wrong); text-transform: uppercase; letter-spacing: .7px; margin-bottom: .45rem; text-align: center; }
+.wrong-item {
+  display: flex; align-items: flex-start; gap: .45rem;
+  background: rgba(214,40,40,.07); border: 1px solid rgba(214,40,40,.2); border-radius: 10px;
+  padding: .42rem .65rem; margin-bottom: .3rem; font-size: .78rem;
+}
+.wrong-item .wi-answer { font-weight: 800; color: var(--wrong); }
+.wrong-item .wi-tr { color: var(--muted); font-size: .72rem; }
+.wrong-list-wrap::-webkit-scrollbar { width: 4px; }
+.wrong-list-wrap::-webkit-scrollbar-thumb { background: rgba(214,40,40,.3); border-radius: 99px; }
+
+.big-btn {
+  background: linear-gradient(135deg, var(--primary), #a07810);
+  color: #0a1628; font-family: 'Fredoka One', cursive; font-size: 1.1rem;
+  border: none; border-radius: 99px; padding: .75rem 2rem;
+  cursor: pointer; box-shadow: 0 6px 20px rgba(201,162,39,.4);
+  transition: transform .15s, box-shadow .15s; letter-spacing: .5px;
+  width: 100%; margin-top: .3rem;
+}
+.big-btn:hover { transform: scale(1.04); box-shadow: 0 8px 28px rgba(201,162,39,.55); }
+
+/* speed picker */
+.speed-pick { margin-bottom: 1rem; }
+.speed-pick p { font-size: .78rem; font-weight: 700; color: var(--muted); margin-bottom: .45rem; }
+.speed-pick-btns { display: flex; gap: .4rem; justify-content: center; }
+.spk-btn {
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: .82rem;
+  padding: .38rem 1rem; border-radius: 99px;
+  border: 1.5px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;
+  transition: all .15s;
+}
+.spk-btn.active { background: var(--primary); border-color: var(--primary); color: #0a1628; }
+.spk-btn:hover:not(.active) { border-color: var(--plight); color: var(--plight); }
+
+/* divider */
+.gold-divider {
+  height: 1px; background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  margin: .8rem 0; opacity: .4;
+}
+</style>
+</head>
+<body>
+
+<!-- decorative atom orbits -->
+<div class="atom-bg">
+  <div class="orbit"></div>
+  <div class="orbit"></div>
+  <div class="orbit"></div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-logo">
+    <img src="data:image/jpeg;base64,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" alt="YTFL Logo">
+    <div class="header-school">
+      <span class="school-name">Yahya Turan Fen Lisesi</span>
+      <span class="game-name">🧩 Resfebe Challenge</span>
+      <span class="sub">Düşen resfebenin cevabını bul ve tıkla!</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="speed-selector">
+      <button class="spd-btn" data-speed="slow">🐢</button>
+      <button class="spd-btn active" data-speed="mid">🚶</button>
+      <button class="spd-btn" data-speed="fast">🚀</button>
+    </div>
+    <div class="scoreboard">
+      <div class="score-box cb"><span class="slabel">✅ Doğru</span><span class="sval" id="sc">0</span></div>
+      <div class="score-box wb"><span class="slabel">❌ Yanlış</span><span class="sval" id="sw">0</span></div>
+      <div class="score-box pb"><span class="slabel">⭐ Puan <span style="font-size:.45rem;opacity:.7">(-50 / +100)</span></span><span class="sval" id="sp">0</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- GAME AREA -->
+<div id="game-area">
+  <div id="toast"></div>
+  <div id="combo-bar">
+    <span id="combo-flame">🔥</span>
+    <div id="combo-text">Kombo <span id="combo-num">0</span>x &nbsp;+<span id="combo-pts">10</span></div>
+  </div>
+  <div id="info-panel"></div>
+</div>
+
+<!-- ANSWER POOL -->
+<div id="answer-pool">
+  <div id="answer-pool-inner"></div>
+</div>
+
+<!-- OVERLAY -->
+<div id="overlay">
+  <div class="overlay-card" id="overlay-card">
+    <div class="overlay-logo">
+      <img src="data:image/jpeg;base64,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" alt="YTFL Logo">
+      <div class="overlay-school">
+        <div class="s1">Yahya Turan Fen Lisesi</div>
+        <div class="s2">Resfebe Challenge</div>
+      </div>
+    </div>
+    <div class="gold-divider"></div>
+    <p>Yukarıdan düşen resfebenin cevabını<br>alttaki seçeneklerden bul! 🎯</p>
+    <div class="speed-pick">
+      <p>⚡ Düşme Hızı Seç</p>
+      <div class="speed-pick-btns">
+        <button class="spk-btn" data-ospeed="slow">🐢 Yavaş</button>
+        <button class="spk-btn active" data-ospeed="mid">🚶 Orta</button>
+        <button class="spk-btn" data-ospeed="fast">🚀 Hızlı</button>
+      </div>
+    </div>
+    <button class="big-btn" onclick="startGame()">🚀 Oyunu Başlat</button>
+  </div>
+</div>
+
+<script>
+const ALL_PUZZLES = [
+  // ── Mevcut + düzeltilmiş ──────────────────────────────────────────────────
+  { emojis:"💧 + ⬇️",                       answer:"Waterfall",                 pron:"WO-ter-fol",           tr:"Şelale",
+    ex:"The <em>waterfall</em> roared as we hiked past it.",
+    exTr:"Yanından geçerken şelale gürlüyordu." },
+  { emojis:"🔥 + 🐶",                        answer:"Hotdog",                    pron:"HOT-dog",              tr:"Sosisli sandviç",
+    ex:"She grabbed a <em>hotdog</em> from the street vendor.",
+    exTr:"Sokak satıcısından bir sosisli sandviç aldı." },
+  { emojis:"🌧️ + 🏹",                       answer:"Rainbow",                   pron:"REYN-bow",             tr:"Gökkuşağı",
+    ex:"A bright <em>rainbow</em> appeared after the storm.",
+    exTr:"Fırtınanın ardından parlak bir gökkuşağı belirdi." },
+  { emojis:"🍯 + 🌙",                        answer:"Honeymoon",                 pron:"HUN-ee-moon",          tr:"Balayı",
+    ex:"They spent their <em>honeymoon</em> in Paris.",
+    exTr:"Balaylarını Paris'te geçirdiler." },
+  { emojis:"🧠 + ⛈️",                        answer:"Brainstorm",                pron:"BREYN-storm",          tr:"Beyin fırtınası yapmak",
+    ex:"Let's <em>brainstorm</em> ideas for the project.",
+    exTr:"Proje için fikirlerimizi beyin fırtınasıyla üretelim." },
+  { emojis:"✌️ + 🍰",                        answer:"Piece of cake",             pron:"PEES ov KEYK",         tr:"Çok kolay (deyim)",
+    ex:"The exam was a <em>piece of cake</em> for her.",
+    exTr:"Sınav onun için çocuk oyuncağıydı." },
+  { emojis:"🔙 + 🦴",                        answer:"Backbone",                  pron:"BAK-bown",             tr:"Omurga / Cesaret",
+    ex:"She showed real <em>backbone</em> in that meeting.",
+    exTr:"O toplantıda gerçek bir cesaret sergiledi." },
+  { emojis:"🌲 + 🍎",                        answer:"Pineapple",                 pron:"PAY-nap-ul",           tr:"Ananas",
+    ex:"She added <em>pineapple</em> chunks to the fruit salad.",
+    exTr:"Meyve salatasına ananas dilimleri ekledi." },
+  { emojis:"🐮 + 👦",                        answer:"Cowboy",                    pron:"KAW-boy",              tr:"Kovboy",
+    ex:"The <em>cowboy</em> rode off into the sunset.",
+    exTr:"Kovboy gün batımına doğru at sürdü." },
+  { emojis:"🛏️ + 🐛",                       answer:"Bedbug",                    pron:"BED-bug",              tr:"Tahtakurusu",
+    ex:"The old hotel had a <em>bedbug</em> problem.",
+    exTr:"Eski otelin tahtakurusu sorunu vardı." },
+  { emojis:"💡 + 🏠",                        answer:"Lighthouse",                pron:"LAYT-haws",            tr:"Deniz feneri",
+    ex:"The <em>lighthouse</em> guided ships through the fog.",
+    exTr:"Deniz feneri gemilere sis içinde rehberlik etti." },
+  { emojis:"👁️ + 🌊 + 🇺",                  answer:"I see you",                 pron:"AY SEE YOO",           tr:"Seni görüyorum",
+    ex:"<em>I see you</em> working so hard every day.",
+    exTr:"Her gün bu kadar çok çalıştığını görüyorum." },
+  { emojis:"🍎 + 👁️",                       answer:"Apple of my eye",           pron:"AP-ul ov may AY",      tr:"Gözümün nuru (deyim)",
+    ex:"My little sister is the <em>apple of my eye</em>.",
+    exTr:"Küçük kız kardeşim gözümün nurudur." },
+  { emojis:"🚫😟 + 🐝 + 😊",               answer:"Don't worry, be happy",     pron:"DOWNT WUR-ee BEE HAP-ee", tr:"Endişelenme, mutlu ol",
+    ex:"<em>Don't worry, be happy</em> — things will work out.",
+    exTr:"Endişelenme, mutlu ol — her şey yoluna girecek." },
+  { emojis:"🧠 + 💪",                        answer:"Knowledge is power",        pron:"NOL-ij IZ PAW-er",     tr:"Bilgi güçtür",
+    ex:"Read every day — <em>knowledge is power</em>.",
+    exTr:"Her gün oku — bilgi güçtür." },
+  { emojis:"🚫😫 + 🚫🏆",                   answer:"No pain, no gain",          pron:"NO PEYN NO GEYN",      tr:"Emeksiz yemek olmaz",
+    ex:"Train hard every morning — <em>no pain, no gain</em>.",
+    exTr:"Her sabah sert antrenman yap — emeksiz yemek olmaz." },
+  { emojis:"🌊 + 🫵 + ⏰",                   answer:"See you later",             pron:"SEE YOO LEY-ter",      tr:"Sonra görüşürüz",
+    ex:"I have to go now — <em>see you later</em>!",
+    exTr:"Şimdi gitmem lazım — sonra görüşürüz!" },
+  { emojis:"👁️ + 🐝 + 🔙",                 answer:"I will be back",            pron:"AY WIL BEE BAK",       tr:"Geri döneceğim",
+    ex:"<em>I will be back</em> in five minutes.",
+    exTr:"Beş dakika içinde geri döneceğim." },
+  { emojis:"🌳 − ee + on",                   answer:"Tron",                      pron:"TRON",                 tr:"Tron (bilim kurgu filmi)",
+    ex:"<em>Tron</em> is a classic sci-fi movie from 1982.",
+    exTr:"Tron, 1982'den kalma klasik bir bilim kurgu filmidir." },
+  { emojis:"🧢 + tain",                      answer:"Captain",                   pron:"KAP-tin",              tr:"Kaptan",
+    ex:"The <em>captain</em> announced a smooth flight ahead.",
+    exTr:"Kaptan, rahat bir uçuş olacağını duyurdu." },
+  { emojis:"🍐 − a + son",                   answer:"Person",                    pron:"PER-sun",              tr:"Kişi / İnsan",
+    ex:"Every <em>person</em> deserves kindness.",
+    exTr:"Her insan nezaketi hak eder." },
+  { emojis:"🛋️ − fa + ft",                  answer:"Soft",                      pron:"SOFT",                 tr:"Yumuşak / Nazik",
+    ex:"The kitten had very <em>soft</em> fur.",
+    exTr:"Yavru kedinin çok yumuşak tüyleri vardı." },
+  { emojis:"📅 − te + rk",                   answer:"Dark",                      pron:"DARK",                 tr:"Karanlık",
+    ex:"The forest was <em>dark</em> and silent at midnight.",
+    exTr:"Orman gece yarısı karanlık ve sessizdi." },
+  { emojis:"🐝 + 🍃 − f + ve + 📥 + 🫵",    answer:"Believe in yourself",       pron:"bih-LEEV in yer-SELF", tr:"Kendine inan",
+    ex:"<em>Believe in yourself</em> and you can do anything.",
+    exTr:"Kendine inan ve her şeyi başarabilirsin." },
+  { emojis:"🔓 − n + r + 🧠",               answer:"Open your brain",           pron:"OH-pen yer BREYN",     tr:"Zihnini aç",
+    ex:"<em>Open your brain</em> to new ideas every day.",
+    exTr:"Her gün yeni fikirlere zihnini aç." },
+  { emojis:"📞 + 🫵 + ⏰",                   answer:"Call you later",            pron:"KOL YOO LEY-ter",      tr:"Seni sonra ararım",
+    ex:"I'm in a meeting — I'll <em>call you later</em>.",
+    exTr:"Toplantıdayım — seni sonra ararım." },
+  { emojis:"🐱 + 🏃 + 🛍️",                 answer:"Cat out of the bag",        pron:"KAT awt ov the BAG",   tr:"Sırrı ifşa etmek",
+    ex:"She let the <em>cat out of the bag</em> about the party.",
+    exTr:"Parti hakkındaki sırrı ağzından kaçırdı." },
+  { emojis:"⏲️ + 🦅",                       answer:"Time flies",                pron:"TAYM FLAYZ",           tr:"Zaman uçup gidiyor",
+    ex:"<em>Time flies</em> when you're having fun.",
+    exTr:"Eğlenirken zaman uçup gidiyor." },
+  { emojis:"🍔 + 😴 + 🔄",                  answer:"Eat, sleep, repeat",        pron:"EET SLEEP rih-PEET",   tr:"Ye, uyu, tekrarla",
+    ex:"During exam week it was just <em>eat, sleep, repeat</em>.",
+    exTr:"Sınav haftasında sadece ye, uyu, tekrarlaydı." },
+  { emojis:"📖 − d + l + 🧬",               answer:"Real life",                 pron:"REEL LAYF",            tr:"Gerçek hayat",
+    ex:"The movie was inspired by <em>real life</em> events.",
+    exTr:"Film gerçek hayat olaylarından esinlendi." },
+
+  // ── Listeden eklenenler (daha önce yoktu) ────────────────────────────────
+  { emojis:"🦶 + 🏀",                        answer:"Football",                  pron:"FUT-bol",              tr:"Futbol / Amerikan futbolu",
+    ex:"They watched the <em>football</em> match together.",
+    exTr:"Maçı birlikte izlediler." },
+  { emojis:"🍳 + 🍰",                        answer:"Pancake",                   pron:"PAN-keyk",             tr:"Pankek",
+    ex:"She made fluffy <em>pancakes</em> for breakfast.",
+    exTr:"Kahvaltı için kabarık pankekler yaptı." },
+  { emojis:"❄️ + 👨",                        answer:"Snowman",                   pron:"SNOW-man",             tr:"Kardan adam",
+    ex:"The kids built a <em>snowman</em> in the garden.",
+    exTr:"Çocuklar bahçede kardan adam yaptı." },
+  { emojis:"👂 + 💍",                        answer:"Earring",                   pron:"EAR-ring",             tr:"Küpe",
+    ex:"She lost one <em>earring</em> at the party.",
+    exTr:"Partide bir küpesini kaybetti." },
+  { emojis:"🌞 + 🌻",                        answer:"Sunflower",                 pron:"SAN-flaw-er",          tr:"Ayçiçeği",
+    ex:"The field was full of bright <em>sunflowers</em>.",
+    exTr:"Tarla parlak ayçiçekleriyle doluydu." },
+  { emojis:"⛈️ + 🧥",                        answer:"Stormcoat",                 pron:"STORM-koht",           tr:"Yağmurluk / fırtına paltosu",
+    ex:"He grabbed his <em>stormcoat</em> before heading out.",
+    exTr:"Dışarı çıkmadan önce yağmurlucunu aldı." },
+  { emojis:"🖐️ + ✍️",                       answer:"Handwriting",               pron:"HAND-ray-ting",        tr:"El yazısı",
+    ex:"Her <em>handwriting</em> is very neat and elegant.",
+    exTr:"El yazısı çok düzgün ve zarif." },
+  { emojis:"🌊 + 🐚",                        answer:"Seashell",                  pron:"SEE-shel",             tr:"Deniz kabuğu",
+    ex:"She collected <em>seashells</em> along the beach.",
+    exTr:"Sahil boyunca deniz kabukları topladı." },
+  { emojis:"🧊 + 🧴",                        answer:"Ice cream",                 pron:"AYS-kreem",            tr:"Dondurma",
+    ex:"Can I have a chocolate <em>ice cream</em>, please?",
+    exTr:"Bir çikolatalı dondurma alabilir miyim?" },
+  { emojis:"☀️ + 🌄",                        answer:"Sunday",                    pron:"SAN-dey",              tr:"Pazar günü",
+    ex:"We always have a family brunch on <em>Sunday</em>.",
+    exTr:"Pazar günleri her zaman aile brunch'ı yaparız." },
+  { emojis:"🚪 + 🔔",                        answer:"Doorbell",                  pron:"DOR-bel",              tr:"Kapı zili",
+    ex:"Someone rang the <em>doorbell</em> at midnight.",
+    exTr:"Gece yarısı biri kapı zilini çaldı." },
+  { emojis:"🌠 + 🐟",                        answer:"Starfish",                  pron:"STAR-fish",            tr:"Denizyıldızı",
+    ex:"They spotted a <em>starfish</em> in the tidal pool.",
+    exTr:"Gelgit havuzunda bir denizyıldızı gördüler." },
+  { emojis:"🌙 + 💡",                        answer:"Moonlight",                 pron:"MOON-layt",            tr:"Ay ışığı",
+    ex:"They danced by the <em>moonlight</em> on the rooftop.",
+    exTr:"Çatıda ay ışığında dans ettiler." },
+  { emojis:"🔋 + 🏦",                        answer:"Powerbank",                 pron:"PAW-er-bank",          tr:"Taşınabilir şarj aleti",
+    ex:"Don't forget to charge your <em>powerbank</em> before the trip.",
+    exTr:"Yolculuktan önce powerbank'ını şarj etmeyi unutma." },
+  { emojis:"🚗 + 🐈",                        answer:"Carpet",                    pron:"KAR-pit",              tr:"Halı",
+    ex:"The living room has a beautiful Persian <em>carpet</em>.",
+    exTr:"Oturma odasında güzel bir İran halısı var." },
+  { emojis:"🍵 + 🏫",                        answer:"Teacher",                   pron:"TEE-cher",             tr:"Öğretmen",
+    ex:"My <em>teacher</em> explained the topic very clearly.",
+    exTr:"Öğretmenim konuyu çok net anlattı." },
+  { emojis:"🔨 + 🧊",                        answer:"Break the ice",             pron:"BREYK the AYS",        tr:"Ortamı yumuşatmak (deyim)",
+    ex:"He told a joke to <em>break the ice</em> at the meeting.",
+    exTr:"Toplantıda ortamı yumuşatmak için bir fıkra anlattı." },
+  { emojis:"👂 + 2️⃣ + 👂",                  answer:"From ear to ear",           pron:"from EAR tu EAR",      tr:"Kulaktan kulağa (çok geniş gülmek)",
+    ex:"She was grinning <em>from ear to ear</em> when she heard the news.",
+    exTr:"Haberi duyunca kulaktan kulağa sırıttı." },
+  { emojis:"⏳ + 💰",                        answer:"Time is money",             pron:"TAYM iz MAN-ee",       tr:"Zaman paradır",
+    ex:"Hurry up — <em>time is money</em>!",
+    exTr:"Acele et — zaman paradır!" },
+  { emojis:"🧈 + 🪰",                        answer:"Butterfly",                 pron:"BAT-er-flay",          tr:"Kelebek",
+    ex:"A beautiful <em>butterfly</em> landed on her hand.",
+    exTr:"Güzel bir kelebek eline kondu." },
+  { emojis:"🚶 + 🧱",                        answer:"Walk into a wall",          pron:"WOK IN-tu a WOL",      tr:"Duvara çarpmak / çıkmaza girmek",
+    ex:"The negotiations <em>walked into a wall</em> again.",
+    exTr:"Müzakereler yeniden çıkmaza girdi." },
+  { emojis:"🐱 + 👜",                        answer:"Let the cat out of the bag", pron:"let the KAT awt ov the BAG", tr:"Sırrı ifşa etmek",
+    ex:"She <em>let the cat out of the bag</em> about the surprise party.",
+    exTr:"Sürpriz parti sırrını ağzından kaçırdı." },
+  { emojis:"🌧️ + 🐱 + 🐶",                  answer:"It's raining cats and dogs", pron:"its REYN-ing KATS and DOGZ", tr:"Bardaktan boşanırcasına yağmak",
+    ex:"Take an umbrella — <em>it's raining cats and dogs</em>.",
+    exTr:"Şemsiye al — bardaktan boşanırcasına yağıyor." },
+  { emojis:"❤️ + 🪨",                        answer:"Heart of stone",            pron:"HART ov STOWN",        tr:"Taş kalpli olmak (deyim)",
+    ex:"He didn't cry once — he has a <em>heart of stone</em>.",
+    exTr:"Hiç ağlamadı — taş kalplinin teki." },
+  { emojis:"🧱 + 🧱",                        answer:"Brick by brick",            pron:"BRIK bay BRIK",        tr:"Adım adım / taş taş üstüne",
+    ex:"They rebuilt the community <em>brick by brick</em>.",
+    exTr:"Topluluğu adım adım yeniden inşa ettiler." },
+  { emojis:"🐺 + 🚪",                        answer:"Wolf at the door",          pron:"WULF at the DOR",      tr:"Kapıda kurt (ekonomik tehlike)",
+    ex:"With bills piling up, there's a <em>wolf at the door</em>.",
+    exTr:"Faturalar birikince kapıda kurt belirir." },
+
+  // ── Bonus: günlük İngilizcede sık kullanılanlar ─────────────────────────
+  { emojis:"🌅 + 🌇",                        answer:"Sunrise",                   pron:"SAN-rayz",             tr:"Gün doğumu",
+    ex:"We woke up early to watch the <em>sunrise</em>.",
+    exTr:"Gün doğumunu izlemek için erken kalktık." },
+  { emojis:"🦁 + ❤️",                        answer:"Lionheart",                 pron:"LAY-on-hart",          tr:"Aslan yürekli",
+    ex:"The soldier was known for being a <em>lionheart</em>.",
+    exTr:"Asker, aslan yürekli olmasıyla tanınırdı." },
+  { emojis:"🌊 + 🏄",                        answer:"Surfboard",                 pron:"SERF-bord",            tr:"Sörf tahtası",
+    ex:"He grabbed his <em>surfboard</em> and ran to the beach.",
+    exTr:"Sörf tahtasını alıp plaja koştu." },
+  { emojis:"🍎 + 🍊 + 🍇",                  answer:"Fruit salad",               pron:"FROOT SAL-ad",         tr:"Meyve salatası",
+    ex:"She made a fresh <em>fruit salad</em> for the picnic.",
+    exTr:"Piknik için taze bir meyve salatası yaptı." },
+  { emojis:"🌍 + 🗺️",                       answer:"World map",                 pron:"WERLD map",            tr:"Dünya haritası",
+    ex:"There was a large <em>world map</em> on the classroom wall.",
+    exTr:"Sınıf duvarında büyük bir dünya haritası vardı." },
+  { emojis:"🐦 + 🏠",                        answer:"Birdhouse",                 pron:"BERD-haws",            tr:"Kuş evi / Kuş yuvası",
+    ex:"He built a <em>birdhouse</em> for the garden.",
+    exTr:"Bahçe için bir kuş evi yaptı." },
+  { emojis:"📚 + 🐛",                        answer:"Bookworm",                  pron:"BUK-werm",             tr:"Kitap kurdu (çok okuyan kişi)",
+    ex:"She's a total <em>bookworm</em> — she reads every night.",
+    exTr:"O tam bir kitap kurdu — her gece okur." },
+  { emojis:"🌧️ + 🌈",                       answer:"After the rain",            pron:"AF-ter the REYN",      tr:"Yağmurdan sonra (güzel şeyler gelir)",
+    ex:"<em>After the rain</em> comes the rainbow.",
+    exTr:"Yağmurdan sonra gökkuşağı gelir." },
+  { emojis:"🎵 + 🎸 + 🥁",                  answer:"Rock and roll",             pron:"ROK and ROHL",         tr:"Rock and roll müzik",
+    ex:"<em>Rock and roll</em> changed music forever.",
+    exTr:"Rock and roll, müziği sonsuza dek değiştirdi." },
+  { emojis:"🤝 + 💼",                        answer:"Business deal",             pron:"BIZ-nes deel",         tr:"İş anlaşması",
+    ex:"They closed the <em>business deal</em> over lunch.",
+    exTr:"Öğle yemeğinde iş anlaşmasını kapattılar." },
+  { emojis:"🌙 + 🐺",                        answer:"Werewolf",                  pron:"WEER-wulf",            tr:"Kurt adam",
+    ex:"The old legend told of a <em>werewolf</em> in the forest.",
+    exTr:"Eski efsane ormandaki bir kurt adamdan söz ediyordu." },
+  { emojis:"🔑 + 🗝️",                       answer:"Key holder",                pron:"KEE hohl-der",         tr:"Anahtar tutacağı / sorumlu kişi",
+    ex:"She is the <em>key holder</em> of the office.",
+    exTr:"O ofisin anahtar tutucusu." },
+  { emojis:"💤 + 🚶",                        answer:"Sleepwalker",               pron:"SLEEP-wo-ker",         tr:"Uyurgezer",
+    ex:"He was a <em>sleepwalker</em> as a child.",
+    exTr:"Çocukken uyurgezdi." },
+  { emojis:"🌿 + 🏠",                        answer:"Greenhouse",                pron:"GREEN-haws",           tr:"Sera",
+    ex:"They grow tomatoes in their <em>greenhouse</em>.",
+    exTr:"Seralarında domates yetiştiriyorlar." },
+  { emojis:"🔥 + 💧",                        answer:"Firefighter",               pron:"FAYR-fay-ter",         tr:"İtfaiyeci",
+    ex:"The brave <em>firefighter</em> rescued the family.",
+    exTr:"Cesur itfaiyeci aileyi kurtardı." },
+  { emojis:"⭐ + 🌟 + ✨",                   answer:"Starlight",                 pron:"STAR-layt",            tr:"Yıldız ışığı",
+    ex:"They walked home by <em>starlight</em>.",
+    exTr:"Eve yıldız ışığında yürüdüler." },
+  { emojis:"🏔️ + 🧗",                       answer:"Rock climbing",             pron:"ROK klaym-ing",        tr:"Kaya tırmanışı",
+    ex:"<em>Rock climbing</em> requires strength and focus.",
+    exTr:"Kaya tırmanışı güç ve konsantrasyon gerektirir." },
+  { emojis:"🛑 + 🕐",                        answer:"Stop watch",                pron:"STOP-woch",            tr:"Kronometre",
+    ex:"He used a <em>stopwatch</em> to time the race.",
+    exTr:"Yarışı zamanlamak için kronometre kullandı." },
+];
+
+// ═══════════════════════════════════════════════════════════
+// SPEED CONFIG  (ms to fall full screen)
+// ═══════════════════════════════════════════════════════════
+const SPEEDS = { slow: 14000, mid: 9000, fast: 5000 };
+let chosenSpeed = 'mid';
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let scoreCorrect = 0, scoreWrong = 0, scorePoints = 0;
+let wrongList    = []; // puzzles answered wrong or missed
+let combo        = 0;  // current streak of correct answers
+let maxCombo     = 0;  // highest combo reached
+
+// ── POOL SYSTEM ──────────────────────────────────────────
+const POOL_SIZE   = 20;   // visible answer chips at a time
+const WIN_SCORE   = 100;  // reach this → win
+const LOSE_SCORE  = -50;  // drop to this → lose
+let remaining    = [];    // puzzles not yet played (full list minus solved)
+let currentPool  = [];    // the 20 answers shown right now
+let solvedAnswers= new Set(); // answers already correctly answered
+let currentPuzzle= null;
+let fallingEl    = null;
+let fallTimer    = null;
+let fallStart    = null;
+let fallDuration = SPEEDS.mid;
+let pausedAt     = null;   // elapsed ms when paused
+let gameAreaH    = 0;
+let isPaused     = false;
+let infoCountdownTimer = null;
+let currentSpeakBtn = null;
+
+// ═══════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+// ═══════════════════════════════════════════════════════════
+// COMBO & POINTS
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Calculate points for a correct answer:
+ *   Base: 10
+ *   + Combo bonus: (combo - 1) * 2  (starts at 0 for combo=1, +2 each subsequent)
+ *   + Position bonus: card in top 33% of game area → +5
+ *   + Speed bonus: fast mode → +2
+ */
+function calcPoints(cardTopPx) {
+  let pts = 10;
+  // combo bonus: every streak adds 2 more (combo=1→+0, combo=2→+2, combo=3→+4 …)
+  if (combo > 1) pts += (combo - 1) * 2;
+  // position bonus — card caught in top third of game area
+  if (cardTopPx !== null && cardTopPx < gameAreaH / 3) pts += 5;
+  // speed bonus
+  if (chosenSpeed === 'fast') pts += 2;
+  return pts;
+}
+
+function addPoints(delta, x, y, label) {
+  scorePoints += delta;
+  // clamp display (can go below -50 display-wise but we catch it)
+  const el = document.getElementById('sp');
+  el.textContent = scorePoints;
+  el.classList.remove('bump');
+  void el.offsetWidth;
+  el.classList.add('bump');
+  // colour the score box based on value
+  const pb = el.closest('.score-box');
+  if (pb) {
+    pb.style.borderColor = scorePoints >= WIN_SCORE ? 'var(--correct)'
+                         : scorePoints <= LOSE_SCORE ? 'var(--wrong)'
+                         : scorePoints > 0 ? 'rgba(201,162,39,.5)'
+                         : 'rgba(232,69,69,.4)';
+  }
+  // LOSE check (only for negative delta)
+  if (delta < 0 && scorePoints <= LOSE_SCORE) {
+    setTimeout(() => endGame('lose'), 400);
+  }
+  // floating label
+  const fl = document.createElement('div');
+  fl.className = 'pt-float';
+  fl.textContent = label || (delta > 0 ? '+' + delta : String(delta));
+  fl.style.color  = delta > 0 ? 'var(--correct)' : 'var(--wrong)';
+  fl.style.left   = (x || window.innerWidth / 2) + 'px';
+  fl.style.top    = (y || 80) + 'px';
+  document.body.appendChild(fl);
+  setTimeout(() => fl.remove(), 950);
+}
+
+function updateComboBar() {
+  const bar  = document.getElementById('combo-bar');
+  const num  = document.getElementById('combo-num');
+  const pts  = document.getElementById('combo-pts');
+  const flame= document.getElementById('combo-flame');
+
+  if (combo <= 1) {
+    bar.className = '';   // hide when no streak
+    return;
+  }
+  bar.classList.add('visible');
+  num.textContent = combo;
+  // preview next reward
+  const preview = 10 + (combo - 1) * 2 + (chosenSpeed === 'fast' ? 2 : 0);
+  pts.textContent = preview;
+
+  // level theming
+  bar.className = 'visible ' +
+    (combo >= 6 ? 'lv4' : combo >= 4 ? 'lv3' : combo >= 2 ? 'lv2' : 'lv1');
+  flame.textContent = combo >= 6 ? '🔥🔥' : combo >= 4 ? '🔥' : '⚡';
+}
+
+function breakCombo() {
+  combo = 0;
+  const bar = document.getElementById('combo-bar');
+  bar.className = '';
+}
+
+
+function getBestEnglishVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  const isEn = v => v.lang.toLowerCase().startsWith('en')
+                 && !v.name.toLowerCase().includes('turkish')
+                 && !v.name.toLowerCase().includes('türkçe');
+  return voices.find(v => v.lang==='en-US' && isEn(v))
+      || voices.find(v => v.lang==='en-GB' && isEn(v))
+      || voices.find(v => isEn(v))
+      || null;
+}
+
+function speak(text, btnEl) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  if (currentSpeakBtn) { currentSpeakBtn.classList.remove('speaking'); currentSpeakBtn=null; }
+
+  const doIt = () => {
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate = 0.82; utt.pitch = 1;
+    const v = getBestEnglishVoice();
+    if (v) { utt.voice = v; utt.lang = v.lang; } else { utt.lang = 'en-US'; }
+    if (btnEl) {
+      currentSpeakBtn = btnEl;
+      btnEl.classList.add('speaking');
+      utt.onend = utt.onerror = () => { btnEl.classList.remove('speaking'); currentSpeakBtn=null; };
+    }
+    window.speechSynthesis.speak(utt);
+  };
+
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length > 0) { doIt(); }
+  else { window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.onvoiceschanged=null; doIt(); }; }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SPEED BUTTONS (header + overlay)
+// ═══════════════════════════════════════════════════════════
+document.querySelectorAll('.spd-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.spd-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    chosenSpeed = btn.dataset.speed;
+    fallDuration = SPEEDS[chosenSpeed];
+    // sync overlay buttons
+    document.querySelectorAll('.spk-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.ospeed === chosenSpeed);
+    });
+  });
+});
+
+document.querySelectorAll('.spk-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.spk-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    chosenSpeed = btn.dataset.ospeed;
+    fallDuration = SPEEDS[chosenSpeed];
+    // sync header buttons
+    document.querySelectorAll('.spd-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.speed === chosenSpeed);
+    });
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════════════════
+function startGame() {
+  scoreCorrect  = scoreWrong = scorePoints = 0;
+  wrongList     = [];
+  combo         = 0;
+  maxCombo      = 0;
+  solvedAnswers = new Set();
+  fallDuration  = SPEEDS[chosenSpeed];
+  remaining     = shuffle([...ALL_PUZZLES]);
+  document.getElementById('sc').textContent = '0';
+  document.getElementById('sw').textContent = '0';
+  document.getElementById('sp').textContent = '0';
+  document.getElementById('overlay').style.display = 'none';
+  hideInfoPanel();
+  drawPool();        // pick first 20
+  buildAnswerPool(); // render them
+  nextPuzzle();
+}
+
+// ═══════════════════════════════════════════════════════════
+// ANSWER POOL — random positions (shuffled flex order)
+// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// POOL SYSTEM
+// ═══════════════════════════════════════════════════════════
+
+/** Pick a fresh random 20-answer pool from ALL_PUZZLES,
+ *  excluding answers already permanently solved. */
+function drawPool() {
+  const available = ALL_PUZZLES.filter(p => !solvedAnswers.has(p.answer));
+  // if fewer than 20 remain, use all
+  const size = Math.min(POOL_SIZE, available.length);
+  currentPool = shuffle(available).slice(0, size);
+}
+
+/** Render currentPool as answer chips. */
+function buildAnswerPool() {
+  const pool = document.getElementById('answer-pool-inner');
+  pool.innerHTML = '';
+  const answers = shuffle(currentPool.map(p => p.answer));
+  answers.forEach(ans => {
+    const btn = document.createElement('button');
+    btn.className = 'ans-btn';
+    btn.textContent = ans;
+    btn.dataset.answer = ans;
+    btn.style.order = Math.floor(Math.random() * 60);
+    btn.addEventListener('click', () => onAnswerClick(ans, btn));
+    pool.appendChild(btn);
+  });
+}
+
+/** After a correct answer: mark solved, draw fresh pool, rebuild chips. */
+function reshufflePool() {
+  // current puzzle answer is now permanently solved
+  if (currentPuzzle) solvedAnswers.add(currentPuzzle.answer);
+  drawPool();
+  buildAnswerPool();
+}
+
+// ═══════════════════════════════════════════════════════════
+// NEXT PUZZLE
+// ═══════════════════════════════════════════════════════════
+function nextPuzzle() {
+  // Filter remaining to only puzzles whose answer is in the current pool
+  const eligible = remaining.filter(p => currentPool.some(cp => cp.answer === p.answer));
+  if (eligible.length === 0) {
+    // No eligible puzzles left at all → game over
+    endGame(); return;
+  }
+  const idx = Math.floor(Math.random() * eligible.length);
+  currentPuzzle = eligible[idx];
+  spawnFalling(currentPuzzle);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SPAWN FALLING CARD
+// ═══════════════════════════════════════════════════════════
+function spawnFalling(puzzle) {
+  if (fallingEl)  { fallingEl.remove(); fallingEl = null; }
+  if (fallTimer)  { cancelAnimationFrame(fallTimer); fallTimer = null; }
+
+  isPaused  = false;
+  pausedAt  = null;
+  gameAreaH = document.getElementById('game-area').clientHeight;
+
+  const card = document.createElement('div');
+  card.className = 'falling-card';
+  card.innerHTML = `
+    <div class="card-num">🧩 Resfebe #${ALL_PUZZLES.indexOf(puzzle)+1}</div>
+    <div class="emoji-line">${puzzle.emojis}</div>
+  `;
+
+  // random horizontal start (keep card mostly visible)
+  const cardW = Math.min(window.innerWidth * 0.82, 300);
+  const margin = 20;
+  const maxLeft = window.innerWidth - cardW - margin;
+  const randLeft = margin + Math.random() * Math.max(0, maxLeft - margin);
+  card.style.left = randLeft + 'px';
+  card.style.transform = 'none';
+
+  document.getElementById('game-area').appendChild(card);
+  fallingEl = card;
+
+  fallStart = performance.now();
+  const cardH = 100;
+
+  function step(now) {
+    if (isPaused) { fallTimer = requestAnimationFrame(step); return; }
+    const elapsed = now - fallStart;
+    const progress = elapsed / fallDuration;
+    const topPx = -cardH + (gameAreaH + cardH) * progress;
+    card.style.top = topPx + 'px';
+    if (progress >= 1) { onMissed(); return; }
+    fallTimer = requestAnimationFrame(step);
+  }
+  fallTimer = requestAnimationFrame(step);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ANSWER CLICK
+// ═══════════════════════════════════════════════════════════
+function onAnswerClick(answer, btn) {
+  if (isPaused || !currentPuzzle) return;
+
+  if (answer === currentPuzzle.answer) {
+    // ✅ CORRECT
+    isPaused = true;
+    cancelAnimationFrame(fallTimer);
+    scoreCorrect++;
+    document.getElementById('sc').textContent = scoreCorrect;
+
+    // get card position for top-bonus check
+    const cardTopPx = fallingEl ? parseFloat(fallingEl.style.top) : null;
+
+    // increment combo
+    combo++;
+    if (combo > maxCombo) maxCombo = combo;
+
+    // calculate points
+    const earned = calcPoints(cardTopPx);
+    const btnRect = btn.getBoundingClientRect();
+
+    // build a descriptive float label
+    let floatLabel = '+' + earned;
+    if (combo > 1)                            floatLabel += ' 🔥x' + combo;
+    if (cardTopPx !== null && cardTopPx < gameAreaH / 3) floatLabel += ' 🎯';
+    if (chosenSpeed === 'fast')               floatLabel += ' ⚡';
+
+    addPoints(earned, btnRect.left + btnRect.width / 2, btnRect.top, floatLabel);
+    updateComboBar();
+
+    btn.classList.add('flash-correct');
+    setTimeout(() => { btn.disabled = true; }, 300);
+
+    // card pop
+    if (fallingEl) {
+      fallingEl.style.animation = 'none';
+      fallingEl.style.transition = 'none';
+      fallingEl.style.transformOrigin = 'center center';
+      fallingEl.style.animation = 'correctPop .4s ease forwards';
+    }
+
+    spawnParticles(fallingEl);
+
+    // remove from remaining
+    remaining = remaining.filter(p => p !== currentPuzzle);
+
+    // ── CHECK WIN ──
+    if (scorePoints >= WIN_SCORE) {
+      const puzzle = currentPuzzle;
+      setTimeout(() => {
+        if (fallingEl) { fallingEl.remove(); fallingEl = null; }
+        showInfoPanel(puzzle, earned, combo, () => endGame('win'));
+      }, 350);
+      return;
+    }
+
+    // show info panel after 300ms
+    const puzzle = currentPuzzle;
+    setTimeout(() => {
+      if (fallingEl) { fallingEl.remove(); fallingEl = null; }
+      showInfoPanel(puzzle, earned, combo);
+      reshufflePool();
+    }, 350);
+
+  } else {
+    // ❌ WRONG — break combo
+    scoreWrong++;
+    document.getElementById('sw').textContent = scoreWrong;
+    breakCombo();
+
+    const btnRect = btn.getBoundingClientRect();
+    addPoints(-10, btnRect.left + btnRect.width / 2, btnRect.top, '−10');
+
+    if (!wrongList.find(p => p === currentPuzzle)) wrongList.push(currentPuzzle);
+
+    btn.classList.add('flash-wrong');
+    setTimeout(() => btn.classList.remove('flash-wrong'), 400);
+    if (fallingEl) {
+      fallingEl.classList.add('wrong-flash');
+      setTimeout(() => { if (fallingEl) fallingEl.classList.remove('wrong-flash'); }, 420);
+    }
+    showToast('❌ Tekrar Dene!', false);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INFO PANEL — 6s countdown
+// ═══════════════════════════════════════════════════════════
+function showInfoPanel(puzzle, earned, currentCombo, onDone) {
+  isPaused = true;
+  const panel = document.getElementById('info-panel');
+  const total = 5;
+  const circ  = 2 * Math.PI * 18;
+
+  const comboBadge = (currentCombo >= 2)
+    ? `<span class="combo-badge">🔥 ${currentCombo}x Kombo!</span>` : '';
+
+  panel.innerHTML = `
+    <div class="info-card" id="info-card">
+      <div class="info-word">
+        ${puzzle.answer}
+        <button class="speak-btn" id="speak-now">🔊 Dinle</button>
+        ${comboBadge}
+      </div>
+      <div class="info-tr">🇹🇷 ${puzzle.tr} &nbsp;·&nbsp; <em style="color:var(--plight);font-style:normal">${puzzle.pron}</em></div>
+      <div class="info-ex">
+        <div class="en">💬 ${puzzle.ex}</div>
+        <div class="tr-ex">🇹🇷 ${puzzle.exTr}</div>
+      </div>
+      <div class="countdown-wrap">
+        <div class="countdown-ring">
+          <svg width="44" height="44" viewBox="0 0 44 44">
+            <circle class="bg" cx="22" cy="22" r="18"/>
+            <circle class="fg" id="cring" cx="22" cy="22" r="18"
+              style="stroke-dasharray:${circ};stroke-dashoffset:0"/>
+          </svg>
+          <div class="countdown-num" id="cnum">${total}</div>
+        </div>
+        <span class="countdown-label">saniye içinde devam edecek</span>
+      </div>
+    </div>
+  `;
+
+  panel.classList.add('show');
+
+  // auto-speak
+  setTimeout(() => {
+    const spkBtn = document.getElementById('speak-now');
+    if (spkBtn) speak(puzzle.answer, spkBtn);
+  }, 200);
+
+  document.getElementById('speak-now').addEventListener('click', () => {
+    speak(puzzle.answer, document.getElementById('speak-now'));
+  });
+
+  // countdown
+  let remaining_s = total;
+  const cring = document.getElementById('cring');
+  const cnum  = document.getElementById('cnum');
+
+  if (infoCountdownTimer) clearInterval(infoCountdownTimer);
+  infoCountdownTimer = setInterval(() => {
+    remaining_s--;
+    if (cnum) cnum.textContent = remaining_s;
+    const offset = circ * (1 - remaining_s / total);
+    if (cring) {
+      cring.style.strokeDashoffset = offset;
+      if (remaining_s <= 2) cring.style.stroke = 'var(--wrong)';
+    }
+    if (remaining_s <= 0) {
+      clearInterval(infoCountdownTimer);
+      hideInfoPanel();
+      if (onDone) { onDone(); } else { reshufflePool(); nextPuzzle(); }
+    }
+  }, 1000);
+}
+
+function hideInfoPanel() {
+  if (infoCountdownTimer) { clearInterval(infoCountdownTimer); infoCountdownTimer = null; }
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  document.getElementById('info-panel').classList.remove('show');
+  isPaused = false;
+}
+
+// ═══════════════════════════════════════════════════════════
+// MISSED
+// ═══════════════════════════════════════════════════════════
+function onMissed() {
+  scoreWrong++;
+  document.getElementById('sw').textContent = scoreWrong;
+  breakCombo();
+  addPoints(-10, window.innerWidth / 2, 120, '−10');
+  if (!wrongList.find(p => p === currentPuzzle)) wrongList.push(currentPuzzle);
+  if (fallingEl) { fallingEl.remove(); fallingEl = null; }
+  showToast('⏰ Kaçırdın! −10', false);
+  if (scorePoints > LOSE_SCORE) {
+    setTimeout(() => { reshufflePool(); nextPuzzle(); }, 700);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════
+let toastTimer = null;
+function showToast(msg, ok) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (ok ? ' ok' : '');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 900);
+}
+
+// ═══════════════════════════════════════════════════════════
+// PARTICLES
+// ═══════════════════════════════════════════════════════════
+function spawnParticles(anchor) {
+  if (!anchor) return;
+  const rect     = anchor.getBoundingClientRect();
+  const gameRect = document.getElementById('game-area').getBoundingClientRect();
+  const cx = rect.left + rect.width/2  - gameRect.left;
+  const cy = rect.top  + rect.height/2 - gameRect.top;
+  const fx = ['⭐','✨','🎉','💫','🌟','🎊'];
+  for (let i=0;i<8;i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = fx[i % fx.length];
+    const angle = (i/8)*Math.PI*2;
+    const dist  = 55 + Math.random()*40;
+    p.style.setProperty('--dx', Math.cos(angle)*dist+'px');
+    p.style.setProperty('--dy', Math.sin(angle)*dist+'px');
+    p.style.left = cx+'px'; p.style.top = cy+'px';
+    document.getElementById('game-area').appendChild(p);
+    setTimeout(() => p.remove(), 800);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// END GAME
+// ═══════════════════════════════════════════════════════════
+function endGame(reason) {
+  if (fallingEl) { fallingEl.remove(); fallingEl = null; }
+  if (fallTimer) { cancelAnimationFrame(fallTimer); fallTimer = null; }
+  hideInfoPanel();
+
+  const total = ALL_PUZZLES.length;
+  const pct   = Math.round(scoreCorrect/(scoreCorrect+scoreWrong)*100)||0;
+
+  let emoji, headline, subline;
+  if (reason === 'win') {
+    emoji = '🏆'; headline = 'Kazandın!';
+    subline = `<em>${WIN_SCORE} puana ulaştın!</em> Harika iş! 🎉`;
+  } else if (reason === 'lose') {
+    emoji = '💀'; headline = 'Oyun Bitti!';
+    subline = `Puan <em>${LOSE_SCORE}'ın altına düştü.</em> Tekrar dene! 💪`;
+  } else {
+    emoji = pct>=90?'🏆':pct>=70?'🎉':pct>=50?'👏':'💪';
+    headline = 'Oyun Bitti!';
+    subline = `Tüm ${total} resfebe tamamlandı! Doğruluk: <strong>${pct}%</strong>`;
+  }
+
+  const ptColor = scorePoints >= WIN_SCORE ? 'var(--correct)'
+                : scorePoints <= LOSE_SCORE ? 'var(--wrong)'
+                : scorePoints >= 0 ? 'var(--correct)' : 'var(--wrong)';
+  const comboLine = maxCombo >= 2
+    ? `<p style="font-size:.85rem;color:var(--accent);font-weight:800;margin-bottom:.8rem">🔥 En yüksek kombo: ${maxCombo}x</p>`
+    : '';
+
+  // build wrong list HTML
+  let wrongHTML = '';
+  if (wrongList.length === 0) {
+    wrongHTML = `<div style="text-align:center;color:var(--correct);font-weight:800;font-size:.9rem;margin-bottom:1rem">🌟 Hiç hata yapmadın! Mükemmel!</div>`;
+  } else {
+    const items = wrongList.map(p => `
+      <div class="wrong-item">
+        <span class="wi-emoji">❌</span>
+        <div>
+          <div class="wi-answer">${p.answer}</div>
+          <div class="wi-tr">${p.emojis} &nbsp;→&nbsp; 🇹🇷 ${p.tr}</div>
+        </div>
+      </div>`).join('');
+    wrongHTML = `
+      <div class="wrong-list-wrap">
+        <h3>❌ Hata Yapılan / Kaçırılan (${wrongList.length})</h3>
+        ${items}
+      </div>`;
+  }
+
+  const oc = document.getElementById('overlay-card');
+  oc.innerHTML = `
+    <h2>${emoji} ${headline}</h2>
+    <p>${subline}</p>
+    <div class="final-scores">
+      <div class="fsb c"><div class="fsv">${scoreCorrect}</div><div class="fsl">✅ Doğru</div></div>
+      <div class="fsb w"><div class="fsv">${scoreWrong}</div><div class="fsl">❌ Yanlış</div></div>
+      <div class="fsb p"><div class="fsv" style="color:${ptColor}">${scorePoints}</div><div class="fsl">⭐ Puan</div></div>
+    </div>
+    ${comboLine}
+    ${wrongHTML}
+    <div class="speed-pick">
+      <p>⚡ Düşme Hızı</p>
+      <div class="speed-pick-btns">
+        <button class="spk-btn${chosenSpeed==='slow'?' active':''}" data-ospeed="slow">🐢 Yavaş</button>
+        <button class="spk-btn${chosenSpeed==='mid'?' active':''}" data-ospeed="mid">🚶 Orta</button>
+        <button class="spk-btn${chosenSpeed==='fast'?' active':''}" data-ospeed="fast">🚀 Hızlı</button>
+      </div>
+    </div>
+    <button class="big-btn" onclick="startGame()">🔄 Tekrar Oyna</button>
+  `;
+  // re-bind overlay speed buttons
+  oc.querySelectorAll('.spk-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      oc.querySelectorAll('.spk-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      chosenSpeed = btn.dataset.ospeed;
+      fallDuration = SPEEDS[chosenSpeed];
+      document.querySelectorAll('.spd-btn').forEach(b=>{
+        b.classList.toggle('active', b.dataset.speed===chosenSpeed);
+      });
+    });
+  });
+
+  document.getElementById('overlay').style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════════════════
+// RESIZE
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('resize', () => {
+  gameAreaH = document.getElementById('game-area').clientHeight;
+});
+
+// preload voices
+if (window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+</script>
+</script>
+</body>
+</html>
